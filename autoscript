@@ -1,0 +1,102 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
+
+-- GUI setup
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+screenGui.Name = "AutoControlUI"
+screenGui.ResetOnSpawn = false
+
+-- Unit Button
+local unitButton = Instance.new("TextButton", screenGui)
+unitButton.Size = UDim2.new(0, 120, 0, 40)
+unitButton.Position = UDim2.new(1, -130, 0, 100)
+unitButton.Text = "Unit: OFF"
+unitButton.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
+
+local unitRunning = false
+unitButton.MouseButton1Click:Connect(function()
+	unitRunning = not unitRunning
+	unitButton.Text = unitRunning and "Unit: ON" or "Unit: OFF"
+end)
+
+-- Slot Input Box
+local slotBox = Instance.new("TextBox", screenGui)
+slotBox.Size = UDim2.new(0, 120, 0, 30)
+slotBox.Position = UDim2.new(1, -130, 0, 60)
+slotBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+slotBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+slotBox.TextSize = 14
+slotBox.Text = "8"
+slotBox.ClearTextOnFocus = false
+
+-- Replay Button
+local replayButton = Instance.new("TextButton", screenGui)
+replayButton.Size = UDim2.new(0, 120, 0, 40)
+replayButton.Position = UDim2.new(1, -130, 0, 150)
+replayButton.Text = "Replay: OFF"
+replayButton.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+
+local autoReplay = false
+replayButton.MouseButton1Click:Connect(function()
+	autoReplay = not autoReplay
+	replayButton.Text = autoReplay and "Replay: ON" or "Replay: OFF"
+end)
+
+-- Replay Function
+local allowReplay = true
+local function tryReplay()
+	if not allowReplay then return end
+	local gui = player:FindFirstChild("PlayerGui")
+	if not gui then return end
+
+	local paths = {
+		"PlayerGui.EndScreen.WinScreen.Normal.Buttons.Retry",
+		"PlayerGui.EndScreen.LoseScreen.Normal.Buttons.Retry"
+	}
+
+	for _, path in ipairs(paths) do
+		local target = player
+		for part in string.gmatch(path, "[^.]+") do
+			target = target:FindFirstChild(part)
+			if not target then break end
+		end
+
+		if target then
+			for _, conn in ipairs(getconnections(target.Activated)) do
+				if typeof(conn.Function) == "function" then
+					task.spawn(conn.Function)
+					allowReplay = false
+					task.delay(3, function()
+						allowReplay = true
+					end)
+					break
+				end
+			end
+		end
+	end
+end
+
+-- Auto Replay Loop
+task.spawn(function()
+	while true do
+		if autoReplay then
+			tryReplay()
+		end
+		task.wait(1)
+	end
+end)
+
+-- Auto Spawn Loop
+task.spawn(function()
+	while true do
+		if unitRunning then
+			local slot = tonumber(slotBox.Text)
+			if slot and slot >= 1 and slot <= 8 then
+				local args = { [1] = "Slot" .. tostring(slot) }
+				ReplicatedStorage:WaitForChild("Events"):WaitForChild("RemoteFunction"):WaitForChild("PlayerSpawn"):InvokeServer(unpack(args))
+			end
+		end
+		task.wait(1)
+	end
+end)
