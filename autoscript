@@ -10,8 +10,8 @@ screenGui.Name = "KeySystemUI"
 screenGui.ResetOnSpawn = false
 
 local keyFrame = Instance.new("Frame", screenGui)
-keyFrame.Size = UDim2.new(0, 300, 0, 240)
-keyFrame.Position = UDim2.new(0.5, -150, 0.5, -120)
+keyFrame.Size = UDim2.new(0, 300, 0, 280)
+keyFrame.Position = UDim2.new(0.5, -150, 0.5, -140)
 keyFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 
 local titleLabel = Instance.new("TextLabel", keyFrame)
@@ -48,6 +48,16 @@ linkButton.Position = UDim2.new(0, 20, 0, 140)
 linkButton.Text = "Get Key Link"
 linkButton.BackgroundColor3 = Color3.fromRGB(0, 255, 127)
 
+local exitButton = Instance.new("TextButton", keyFrame)
+exitButton.Size = UDim2.new(0, 260, 0, 30)
+exitButton.Position = UDim2.new(0, 20, 0, 180)
+exitButton.Text = "Exit Script"
+exitButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+
+exitButton.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
+
 -- Key check
 local correctKey = ""
 local success, result = pcall(function()
@@ -81,7 +91,7 @@ local function unlockScript()
     unitButton.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
 
     local unitRunning = false
-    local selectedSlot = "Slot8"
+    local selectedSlot = ""
 
     unitButton.MouseButton1Click:Connect(function()
         unitRunning = not unitRunning
@@ -117,10 +127,22 @@ local function unlockScript()
         end
     end)
 
+    local exitButton = Instance.new("TextButton", screenGui)
+    exitButton.Size = UDim2.new(0, 120, 0, 30)
+    exitButton.Position = UDim2.new(1, -130, 0, 240)
+    exitButton.Text = "Exit Script"
+    exitButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+
+    exitButton.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+        autoReplay = false
+        unitRunning = false
+    end)
+
     -- Auto spawn unit loop
     task.spawn(function()
         while true do
-            if unitRunning then
+            if unitRunning and selectedSlot ~= "" then
                 local args = { [1] = selectedSlot }
                 ReplicatedStorage:WaitForChild("Events"):WaitForChild("RemoteFunction"):WaitForChild("PlayerSpawn"):InvokeServer(unpack(args))
             end
