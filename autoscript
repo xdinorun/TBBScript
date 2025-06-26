@@ -1,4 +1,4 @@
--- Key System Setup
+-- Full TBB Script with Key System and Auto Controls
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
@@ -10,13 +10,20 @@ screenGui.Name = "KeySystemUI"
 screenGui.ResetOnSpawn = false
 
 local keyFrame = Instance.new("Frame", screenGui)
-keyFrame.Size = UDim2.new(0, 300, 0, 150)
-keyFrame.Position = UDim2.new(0.5, -150, 0.5, -75)
+keyFrame.Size = UDim2.new(0, 300, 0, 240)
+keyFrame.Position = UDim2.new(0.5, -150, 0.5, -120)
 keyFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+
+local titleLabel = Instance.new("TextLabel", keyFrame)
+titleLabel.Size = UDim2.new(0, 260, 0, 20)
+titleLabel.Position = UDim2.new(0, 20, 0, 0)
+titleLabel.Text = "Made by xdinorun"
+titleLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+titleLabel.BackgroundTransparency = 1
 
 local keyBox = Instance.new("TextBox", keyFrame)
 keyBox.Size = UDim2.new(0, 260, 0, 40)
-keyBox.Position = UDim2.new(0, 20, 0, 20)
+keyBox.Position = UDim2.new(0, 20, 0, 30)
 keyBox.PlaceholderText = "Enter Key Here"
 keyBox.Text = ""
 keyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -24,7 +31,7 @@ keyBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 
 local statusLabel = Instance.new("TextLabel", keyFrame)
 statusLabel.Size = UDim2.new(0, 260, 0, 20)
-statusLabel.Position = UDim2.new(0, 20, 0, 70)
+statusLabel.Position = UDim2.new(0, 20, 0, 75)
 statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
 statusLabel.Text = ""
 statusLabel.BackgroundTransparency = 1
@@ -34,6 +41,12 @@ submitButton.Size = UDim2.new(0, 260, 0, 30)
 submitButton.Position = UDim2.new(0, 20, 0, 100)
 submitButton.Text = "Submit Key"
 submitButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+
+local linkButton = Instance.new("TextButton", keyFrame)
+linkButton.Size = UDim2.new(0, 260, 0, 30)
+linkButton.Position = UDim2.new(0, 20, 0, 140)
+linkButton.Text = "Get Key Link"
+linkButton.BackgroundColor3 = Color3.fromRGB(0, 255, 127)
 
 -- Key check
 local correctKey = ""
@@ -49,38 +62,33 @@ end
 local function unlockScript()
     screenGui:Destroy()
 
-    -- Begin Main Script
+    -- Control UI Setup
+    local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+    screenGui.Name = "AutoControlUI"
+    screenGui.ResetOnSpawn = false
 
-    -- GUI setup
-    local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-    gui.Name = "AutoControlUI"
-    gui.ResetOnSpawn = false
+    local header = Instance.new("TextLabel", screenGui)
+    header.Size = UDim2.new(0, 200, 0, 20)
+    header.Position = UDim2.new(1, -210, 0, 70)
+    header.Text = "Made by xdinorun"
+    header.TextColor3 = Color3.fromRGB(0, 255, 0)
+    header.BackgroundTransparency = 1
 
-    -- Unit Button
-    local unitButton = Instance.new("TextButton", gui)
+    local unitButton = Instance.new("TextButton", screenGui)
     unitButton.Size = UDim2.new(0, 120, 0, 40)
     unitButton.Position = UDim2.new(1, -130, 0, 100)
     unitButton.Text = "Unit: OFF"
     unitButton.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
 
     local unitRunning = false
+    local selectedSlot = "Slot8"
+
     unitButton.MouseButton1Click:Connect(function()
         unitRunning = not unitRunning
-        unitButton.Text = unitRunning and "Unit: ON" or "Unit: OFF"
+        unitButton.Text = unitRunning and ("Unit: ON (" .. selectedSlot .. ")") or "Unit: OFF"
     end)
 
-    -- Slot Input Box
-    local slotBox = Instance.new("TextBox", gui)
-    slotBox.Size = UDim2.new(0, 120, 0, 30)
-    slotBox.Position = UDim2.new(1, -130, 0, 60)
-    slotBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    slotBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-    slotBox.TextSize = 14
-    slotBox.Text = "8"
-    slotBox.ClearTextOnFocus = false
-
-    -- Replay Button
-    local replayButton = Instance.new("TextButton", gui)
+    local replayButton = Instance.new("TextButton", screenGui)
     replayButton.Size = UDim2.new(0, 120, 0, 40)
     replayButton.Position = UDim2.new(1, -130, 0, 150)
     replayButton.Text = "Replay: OFF"
@@ -92,61 +100,69 @@ local function unlockScript()
         replayButton.Text = autoReplay and "Replay: ON" or "Replay: OFF"
     end)
 
-    -- Replay Function
-    local allowReplay = true
+    local slotBox = Instance.new("TextBox", screenGui)
+    slotBox.Size = UDim2.new(0, 120, 0, 30)
+    slotBox.Position = UDim2.new(1, -130, 0, 200)
+    slotBox.PlaceholderText = "Slot (e.g. Slot8)"
+    slotBox.Text = ""
+    slotBox.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+    slotBox.TextColor3 = Color3.fromRGB(0, 0, 0)
+
+    slotBox.FocusLost:Connect(function()
+        if slotBox.Text ~= "" then
+            selectedSlot = slotBox.Text
+            if unitRunning then
+                unitButton.Text = "Unit: ON (" .. selectedSlot .. ")"
+            end
+        end
+    end)
+
+    -- Auto spawn unit loop
+    task.spawn(function()
+        while true do
+            if unitRunning then
+                local args = { [1] = selectedSlot }
+                ReplicatedStorage:WaitForChild("Events"):WaitForChild("RemoteFunction"):WaitForChild("PlayerSpawn"):InvokeServer(unpack(args))
+            end
+            task.wait(1)
+        end
+    end)
+
+    -- Auto replay loop with cooldown for both win and lose
+    local lastReplayTime = 0
+    local replayCooldown = 3
+
     local function tryReplay()
-        if not allowReplay then return end
         local gui = player:FindFirstChild("PlayerGui")
         if not gui then return end
 
-        local paths = {
-            "PlayerGui.EndScreen.WinScreen.Normal.Buttons.Retry",
-            "PlayerGui.EndScreen.LoseScreen.Normal.Buttons.Retry"
+        local now = tick()
+        if now - lastReplayTime < replayCooldown then return end
+
+        local retryButtons = {
+            gui:FindFirstChild("EndScreen") and gui.EndScreen:FindFirstChild("WinScreen") and gui.EndScreen.WinScreen:FindFirstChild("Normal") and gui.EndScreen.WinScreen.Normal:FindFirstChild("Buttons") and gui.EndScreen.WinScreen.Normal.Buttons:FindFirstChild("Retry"),
+            gui:FindFirstChild("EndScreen") and gui.EndScreen:FindFirstChild("LoseScreen") and gui.EndScreen.LoseScreen:FindFirstChild("Normal") and gui.EndScreen.LoseScreen.Normal:FindFirstChild("Buttons") and gui.EndScreen.LoseScreen.Normal.Buttons:FindFirstChild("Retry"),
         }
 
-        for _, path in ipairs(paths) do
-            local target = player
-            for part in string.gmatch(path, "[^.]+") do
-                target = target:FindFirstChild(part)
-                if not target then break end
-            end
-
-            if target then
-                for _, conn in ipairs(getconnections(target.Activated)) do
+        for _, retryButton in ipairs(retryButtons) do
+            if retryButton then
+                for _, conn in ipairs(getconnections(retryButton.Activated)) do
                     if typeof(conn.Function) == "function" then
                         task.spawn(conn.Function)
-                        allowReplay = false
-                        task.delay(3, function()
-                            allowReplay = true
-                        end)
-                        break
+                        lastReplayTime = now
+                        return
                     end
                 end
             end
         end
     end
 
-    -- Auto Replay Loop
     task.spawn(function()
         while true do
             if autoReplay then
                 tryReplay()
             end
-            task.wait(1)
-        end
-    end)
-
-    -- Auto Spawn Loop
-    task.spawn(function()
-        while true do
-            if unitRunning then
-                local slot = tonumber(slotBox.Text)
-                if slot and slot >= 1 and slot <= 8 then
-                    local args = { [1] = "Slot" .. tostring(slot) }
-                    ReplicatedStorage:WaitForChild("Events"):WaitForChild("RemoteFunction"):WaitForChild("PlayerSpawn"):InvokeServer(unpack(args))
-                end
-            end
-            task.wait(1)
+            task.wait(0.5)
         end
     end)
 end
@@ -157,4 +173,9 @@ submitButton.MouseButton1Click:Connect(function()
     else
         statusLabel.Text = "Invalid key. Try again."
     end
+end)
+
+linkButton.MouseButton1Click:Connect(function()
+    setclipboard("https://direct-link.net/1364690/QsGNj29AtG5e")
+    statusLabel.Text = "Link copied to keyboard!"
 end)
